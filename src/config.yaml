@@ -1,0 +1,28 @@
+#rl state
+heading_dim: 1
+velocity_dim: 1
+action_dims: 2
+state_dims: 3
+n_channels: 4
+img_height: 128
+img_width: 128
+
+high_vel: 3
+low_vel: 0
+
+value_lr: 0.0001
+q_lr: 0.0001
+policy_lr: 0.0001
+
+batch_size: 64
+latent_dims: 64
+replay_size: 5000
+
+gamma: 0.95
+soft_tau: 0.01
+
+max_episodes: 500
+max_episode_len: 1000
+
+GPU: True
+mapping: False
