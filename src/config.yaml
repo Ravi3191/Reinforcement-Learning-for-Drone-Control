@@ -10,6 +10,9 @@ img_width: 128
 high_vel: 3
 low_vel: 0
 
+high_heading: 3
+low_heading: 0
+
 value_lr: 0.0001
 q_lr: 0.0001
 policy_lr: 0.0001
@@ -26,3 +29,22 @@ max_episode_len: 1000
 
 GPU: True
 mapping: False
+
+simulation_max_x: 1000
+simulation_min_y: -1000
+simulation_max_x: 1000
+simulation_min_y: -1000
+
+completion_reward: 100
+crash_reward: -100
+dist_reward_weight: 0.05
+
+
+value_network_path: './logging/value_net.pth'
+value_network_path: './logging/policy_net.pth'
+softq1_path: './logging/softq1_net.pth'
+softq2_path: './logging/softq2_net.pth'
+reward_array_path: './logging/rewards.npy'
+
+observation_path: './buffer/obs/'
+next_observation_path: './buffer/next_obs/'
