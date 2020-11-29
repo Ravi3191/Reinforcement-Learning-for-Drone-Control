@@ -1,13 +1,15 @@
 import torch
 
 
-class ReplayBuffer:
+class ReplayBuffer_dir:
     def __init__(self, arg_params):
-      
+
+        self.observation_path = arg_params[observation_path]
+        self.next_observation_path = arg_params[next_observation_path]
+
         self.capacity = arg_params[replay_size]
         self.batch_size = arg_params[batch_size]
 
-        self.image_buffer = torch.zeros((capacity,arg_params[n_channels],arg_params[img_height],arg_params[img_width]))
         self.curr_pos_buffer = torch.zeros((capacity,arg_params[state_dims]))
         self.goal_buffer = torch.zeros((capacity,arg_params[state_dims]))
         self.action_buffer = torch.zeros((capacity,arg_params[action_dims]))
@@ -18,9 +20,13 @@ class ReplayBuffer:
         self.position = 0
         self.state = 0
     
-    def push(self, im, curr_pos, goal, action, reward, next_state, done):
+    def push(self, im, curr_pos, goal, action, reward, next_im, next_state, done):
         
-        self.image_buffer[self.position] = im
+        curr_obs_path = self.obesrvation_path + str(self.position) + '.pt' 
+        next_obs_path = self.next_observation_path + str(self.position) + '.pt'
+        torch.save(im,curr_obs_path)
+        torch.save(next_im,curr_obs_path)
+
         self.curr_pos_buffer[self.position] = curr_pos
         self.goal_buffer[self.position] = goal
         self.action_buffer[self.position] = action
@@ -41,13 +47,21 @@ class ReplayBuffer:
           sample_indices = torch.arange(sample_len)
 
         else if (self.state == 0 && self.position + 1 > self.batch_size):
-          sample_len = self.batch_size
           sample_indices = torch.randint(0,self.position,sample_len)
 
         else:
           sample_indices = torch.randint(0,self.capacity-1,sample_len)
 
-        return self.image_buffer[sample_indices,:,:,:], self.curr_pos_buffer[sample_indices,:], self.goal_buffer[sample_indices,:], self.action_buffer[sample_indices,:] , self.reward_buffer[sample_indices,:], self.next_state_buffer[sample_indices,:], self.done_buffer[sample_indices,:]
+        obs_batch = torch.zeros((sample_len,arg_params[n_channels],arg_params[img_height],arg_params[img_width]))
+        next_obs_batch = torch.zeros((sample_len,arg_params[n_channels],arg_params[img_height],arg_params[img_width]))
+
+        for int i in range(sample_len):
+          obs_batch[i,:,:,:] = torch.laod(self.observation_path + str(sample_indices[i]) + '.pt')
+          next_obs_batch[i,:,:,:] = torch.laod(self.next_obesrvation_path + str(sample_indices[i]) + '.pt')
+        
+        return obs_batch, self.curr_pos_buffer[sample_indices,:], self.goal_buffer[sample_indices,:],\
+         self.action_buffer[sample_indices,:] , self.reward_buffer[sample_indices,:], \
+         next_obs_batch, self.next_state_buffer[sample_indices,:], self.done_buffer[sample_indices,:]
     
     def __len__(self):
         if (self.state == 0):
