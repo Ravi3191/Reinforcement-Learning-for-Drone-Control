@@ -31,9 +31,9 @@ GPU: True
 mapping: False
 
 simulation_max_x: 1000
-simulation_min_x: -1000
+simulation_min_x: 0
 simulation_max_y: 1000
-simulation_min_y: -1000
+simulation_min_y: 0
 
 completion_reward: 100
 crash_reward: -100
