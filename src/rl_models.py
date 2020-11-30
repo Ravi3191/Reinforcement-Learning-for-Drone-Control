@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import time
 import os
+from torch.distributions import Normal
 from torchvision import models
+import torch.nn.functional as F
 import cv2
 import numpy as np
 
@@ -67,9 +69,11 @@ class SoftQNetwork(torch.nn.Module):
 
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, n_channels, action_dims, n_dims, latent_dims ,log_std_min=-20, log_std_max=2):
+    def __init__(self, n_channels, action_dims, n_dims, latent_dims ,device, log_std_min=-20, log_std_max=2):
         super(PolicyNetwork, self).__init__()
         
+        self.device = device
+
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
 
@@ -93,10 +97,8 @@ class PolicyNetwork(nn.Module):
 
         output = self.res(im).flatten(1,-1)
         output = self.linear0(output)
-        
-        output = torch.cat((output,goal - x,action),axis = 1)
-
-        output = F.leaky_relu(self.linear1(output))
+        output = torch.cat((output,(goal - x)),axis = 1)
+        output = F.leaky_relu(self.linear1(output.float()))
         output = self.linear2(output)
         
         mean    = self.mean_linear(output)
@@ -111,9 +113,9 @@ class PolicyNetwork(nn.Module):
         
         normal = Normal(0, 1)
         z      = normal.sample()
-        action = torch.tanh(mean+ std*z.to(device))
-        log_prob = Normal(mean, std).log_prob(mean+ std*z.to(device)) - torch.log(1 - action.pow(2) + epsilon)
-        return action, log_prob, z, mean, log_std
+        action = torch.tanh(mean+ std*z.to(self.device))
+        log_prob = Normal(mean, std).log_prob(mean+ std*z.to(self.device)) - torch.log(1 - action.pow(2) + epsilon)
+        return action, (log_prob[:,0]*log_prob[:,1])[:,None], z, mean, log_std
         
     
     def get_action(self, im, x, goal):
@@ -121,8 +123,8 @@ class PolicyNetwork(nn.Module):
         std = log_std.exp()
         
         normal = Normal(0, 1)
-        z      = normal.sample().to(device)
+        z      = normal.sample().to(self.device)
         action = torch.tanh(mean + std*z)
         
         action  = action.cpu()
-        return action[0]
+        return action
