@@ -10,12 +10,12 @@ class ReplayBuffer_dir:
         self.capacity = arg_params['replay_size']
         self.batch_size = arg_params['batch_size']
 
-        self.curr_pos_buffer = torch.zeros((capacity,arg_params['state_dims']))
-        self.goal_buffer = torch.zeros((capacity,arg_params['state_dims']))
-        self.action_buffer = torch.zeros((capacity,arg_params['action_dims']))
-        self.reward_buffer = torch.zeros((capacity,1))
-        self.next_state_buffer = torch.zeros((capacity,arg_params['state_dims']))
-        self.done_buffer = torch.zeros((capacity,1))
+        self.curr_pos_buffer = torch.zeros((self.capacity,arg_params['state_dims']))
+        self.goal_buffer = torch.zeros((self.capacity,arg_params['state_dims']))
+        self.action_buffer = torch.zeros((self.capacity,arg_params['action_dims']))
+        self.reward_buffer = torch.zeros((self.capacity,1))
+        self.next_state_buffer = torch.zeros((self.capacity,arg_params['state_dims']))
+        self.done_buffer = torch.zeros((self.capacity,1))
 
         self.position = 0
         self.state = 0

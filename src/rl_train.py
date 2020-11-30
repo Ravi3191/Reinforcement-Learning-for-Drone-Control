@@ -28,7 +28,6 @@ class Learner():
 
 	def __init__(self):
 
-		self.env = FM.FlightMare(arg_params)
 
 		self.device = "cpu"
 
@@ -37,10 +36,11 @@ class Learner():
 				self.device = "cuda:0"
 
 		date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-		path = arg_params['logging_path'] + date[:2] + date[3:5] + date[5:7] + date[6:10] + date[11:13] + date[14:16] + date[17:19] + '/'
+		path = arg_params['root_dir'] + arg_params['logging_path'] + date[:2] + date[3:5]  + date[6:10] + date[11:13] + date[14:16] + date[17:19] + '/'
 
 		try:
-			os.mkdir(path)
+			print(path)
+			os.makedirs(path,exist_ok = True)
 		except:
 			print('unable to create directory')
 			exit()
@@ -55,11 +55,11 @@ class Learner():
 		self.target_value_net = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
 
 		self.soft_q_net1 = rl_models.SoftQNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
-										arg_params[state_dims]).to(self.device)
+										arg_params['state_dims']).to(self.device)
 		self.soft_q_net2 = rl_models.SoftQNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
 										arg_params['state_dims']).to(self.device)
 		self.policy_net = rl_models.PolicyNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
-										arg_params['state_dims'], arg_params['latent_dim']).to(self.device)
+										arg_params['state_dims'], arg_params['latent_dims']).to(self.device)
 
 		for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
 			target_param.data.copy_(param.data)
@@ -76,6 +76,8 @@ class Learner():
 
 		self.replay_buffer = mem_buf.ReplayBuffer_dir(arg_params)
 		self.batch_size = arg_params['batch_size']
+
+		self.env = FM.FlightMare(arg_params)
 
 	def update(self,gamma=0.99,soft_tau=1e-2):
 		

@@ -39,12 +39,14 @@ completion_reward: 100
 crash_reward: -100
 dist_reward_weight: 0.05
 
-logging_path: './logging/training_curves/'
-value_network_path: './logging/value_net.pth'
-value_network_path: './logging/policy_net.pth'
-softq1_path: './logging/softq1_net.pth'
-softq2_path: './logging/softq2_net.pth'
-reward_array_path: './logging/rewards.npy'
+root_dir: '/home/ravi/Ravi_D/Acadamic/UPENN/Third_sem/CIS_700_02/Project/Reinforcement-Learning-for-Drone-Control' 
 
-observation_path: './buffer/obs/'
-next_observation_path: './buffer/next_obs/'
+logging_path: '/logging/training_curves/'
+value_network_path: '/logging/value_net.pth'
+value_network_path: '/logging/policy_net.pth'
+softq1_path: '/logging/softq1_net.pth'
+softq2_path: '/logging/softq2_net.pth'
+reward_array_path: '/logging/rewards.npy'
+
+observation_path: '/buffer/obs/'
+next_observation_path: '/buffer/next_obs/'

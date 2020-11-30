@@ -9,7 +9,7 @@ import numpy as np
 
 class ValueNetwork(torch.nn.Module):
     def __init__(self,n_channels,n_dims):
-        super(Model, self).__init__()
+        super(ValueNetwork, self).__init__()
         self.base_model = models.resnet50(pretrained=True)
         self.base_layers = list(self.base_model.children())
 
@@ -36,9 +36,9 @@ class ValueNetwork(torch.nn.Module):
 
       return output
 
-class QNetwork(torch.nn.Module):
+class SoftQNetwork(torch.nn.Module):
     def __init__(self, n_channels, action_dims, n_dims):
-        super(Model, self).__init__()
+        super(SoftQNetwork, self).__init__()
         self.base_model = models.resnet50(pretrained=True)
         self.base_layers = list(self.base_model.children())
 
@@ -85,9 +85,9 @@ class PolicyNetwork(nn.Module):
         self.linear1 = nn.Linear(1000 + n_dims,512)
         self.linear2 = nn.Linear(512,latent_dims)
         
-        self.mean_linear = nn.Linear(latent_dims, actions_dims)
+        self.mean_linear = nn.Linear(latent_dims, action_dims)
         
-        self.log_std_linear = nn.Linear(latent_dims, actions_dims)
+        self.log_std_linear = nn.Linear(latent_dims, action_dims)
         
     def forward(self, im, x, goal):
 
