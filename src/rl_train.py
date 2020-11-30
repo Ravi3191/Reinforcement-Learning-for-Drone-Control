@@ -30,7 +30,7 @@ class Learner():
 
 	def __init__():
 
-		self.env = FM.NormalizedActions() #TODO
+		self.env = FM.FlightMare(arg_params) #TODO
 
 		self.device = "cpu"
 
