@@ -190,4 +190,4 @@ class Learner():
 if __name__ == '__main__':
 
 	SAC = Learner()
-	Learner.train()
+	SAC.train()

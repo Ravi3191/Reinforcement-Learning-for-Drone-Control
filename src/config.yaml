@@ -39,7 +39,7 @@ completion_reward: 100
 crash_reward: -100
 dist_reward_weight: 0.05
 
-
+logging_path: './logging/training_curves/'
 value_network_path: './logging/value_net.pth'
 value_network_path: './logging/policy_net.pth'
 softq1_path: './logging/softq1_net.pth'
