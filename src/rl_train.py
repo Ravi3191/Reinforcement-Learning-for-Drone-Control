@@ -3,19 +3,16 @@ import torch
 import os
 import torchvision.models as models
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import ToTensor
-from torchvision import transforms
 import torch.nn as nn
-import torchvision.transforms.functional as TF
 import torch.nn.functional as F
-from PIL import Image
 import random
-from IPython.display import display
 import matplotlib.pyplot as plt
 import torchvision
 import yaml
 import copy
+
+from torch.utils.tensorboard import SummaryWriter
 
 with open('config.yaml') as file:
   arg_params = yaml.load(file)
@@ -25,18 +22,34 @@ import memory_buffer as mem_buf
 import Flightmare_bridge as FM
 import rl_models
 
+from datetime import datetime
+
 
 class Learner():
 
 	def __init__():
 
-		self.env = FM.NormalizedActions() #TODO
+		self.env = FM.FlightMare(arg_params)
 
 		self.device = "cpu"
 
 		if (arg_params['GPU']):
 			if(torch.cuda.is_available()):
 				self.device = "cuda:0"
+
+		date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		path = arg_params['logging_path'] + date[:2] + date[3:5] + date[5:7] + date[6:10] + date[11:13] + date[14:16] + date[17:19] + '/'
+
+		try:
+			os.mkdir(path)
+		except:
+			print('unable to create directory')
+			exit()
+
+
+		self.logging = SummaryWriter(path)
+
+		self.steps = 0
 
 		self.value_net        = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
 
@@ -65,7 +78,7 @@ class Learner():
 		self.replay_buffer = mem_buf.ReplayBuffer_dir(arg_params)
 		self.batch_size = arg_params['batch_size']
 
-	def update(self,gamma=0.99,soft_tau=1e-2,):
+	def update(self,gamma=0.99,soft_tau=1e-2):
 	    
 	    im, state, goal, action, reward, next_im, next_state, done = self.replay_buffer.sample()
 
@@ -84,6 +97,9 @@ class Learner():
 	    q_value_loss1 = self.soft_q_criterion1(predicted_q_value1, target_q_value.detach())
 	    q_value_loss2 = self.soft_q_criterion2(predicted_q_value2, target_q_value.detach())
 
+	    self.logging.add_scalar('Loss/softq1',q_value_loss1,self.steps)
+	    self.logging.add_scalar('Loss/softq2',q_value_loss2,self.steps)	    
+
 	    self.soft_q_optimizer1.zero_grad()
 	    self.q_value_loss1.backward()
 	    self.soft_q_optimizer1.step()
@@ -96,7 +112,7 @@ class Learner():
 	    predicted_new_q_value = torch.min(self.soft_q_net1(im, curr_pos, goal, new_action),self.soft_q_net2(im, curr_pos, goal, new_action))
 	    target_value_func = predicted_new_q_value - log_prob
 	    value_loss = self.value_criterion(predicted_value, target_value_func.detach())
-
+	    self.logging.add_scalar('Loss/value',value_loss,self.steps)
 	    
 	    self.value_optimizer.zero_grad()
 	    self.value_loss.backward()
@@ -104,7 +120,7 @@ class Learner():
 
 	# Training Policy Function
 	    policy_loss = (log_prob - predicted_new_q_value).mean()
-
+	    self.logging.add_scalar('Loss/policy_loss',policy_loss,self.steps)
 	    self.policy_optimizer.zero_grad()
 	    self.policy_loss.backward()
 	    self.policy_optimizer.step()
@@ -114,6 +130,8 @@ class Learner():
 	        target_param.data.copy_(
 	            target_param.data * (1.0 - soft_tau) + param.data * soft_tau
 	        )
+
+	    self.steps += 1
 
 	def train(self):
 
@@ -155,6 +173,7 @@ class Learner():
 		            break
 
 		    rewards[episodes] = episode_reward
+		   	self.logging.add_scalar('Reward/episode_reward',episode_reward,episodes)
 		    episodes += 1
 		    print("episode :",episodes," episode reward:", episode_reward," total_steps:", iters)
 		    
