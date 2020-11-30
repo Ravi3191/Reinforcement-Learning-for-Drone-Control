@@ -1,5 +1,6 @@
-import gym
-from gym import spaces
+#import gym
+#from gym import spaces
+import numpy as np
 import rospy
 from cv_bridge import CvBridge
 

@@ -1,5 +1,5 @@
 import torch
-
+import numpy as np
 
 class ReplayBuffer_dir:
     def __init__(self, arg_params):
@@ -34,7 +34,7 @@ class ReplayBuffer_dir:
         self.next_state_buffer[self.position] = next_state
         self.done_buffer = done
 
-        if(self.state == 0 && self.position == self.capacity - 1):
+        if(self.state == 0 and self.position == self.capacity - 1):
           state = 1
 
         self.position = (self.position + 1) % self.capacity
@@ -42,11 +42,11 @@ class ReplayBuffer_dir:
     def sample(self):
         sample_len = self.batch_size
 
-        if (self.state == 0 && self.position + 1 < self.batch_size):
+        if (self.state == 0 and self.position + 1 < self.batch_size):
           sample_len = self.positon + 1
           sample_indices = torch.arange(sample_len)
 
-        else if (self.state == 0 && self.position + 1 > self.batch_size):
+        elif (self.state == 0 and self.position + 1 > self.batch_size):
           sample_indices = torch.randint(0,self.position,sample_len)
 
         else:
@@ -55,7 +55,7 @@ class ReplayBuffer_dir:
         obs_batch = torch.zeros((sample_len,arg_params['n_channels'],arg_params['img_height'],arg_params['img_width']))
         next_obs_batch = torch.zeros((sample_len,arg_params['n_channels'],arg_params['img_height'],arg_params['img_width']))
 
-        for int i in range(sample_len):
+        for i in range(sample_len):
           obs_batch[i,:,:,:] = torch.laod(self.observation_path + str(sample_indices[i]) + '.pt')
           next_obs_batch[i,:,:,:] = torch.laod(self.next_obesrvation_path + str(sample_indices[i]) + '.pt')
         
