@@ -4,17 +4,17 @@ import torch
 class ReplayBuffer_dir:
     def __init__(self, arg_params):
 
-        self.observation_path = arg_params[observation_path]
-        self.next_observation_path = arg_params[next_observation_path]
+        self.observation_path = arg_params['observation_path']
+        self.next_observation_path = arg_params['next_observation_path']
 
-        self.capacity = arg_params[replay_size]
-        self.batch_size = arg_params[batch_size]
+        self.capacity = arg_params['replay_size']
+        self.batch_size = arg_params['batch_size']
 
-        self.curr_pos_buffer = torch.zeros((capacity,arg_params[state_dims]))
-        self.goal_buffer = torch.zeros((capacity,arg_params[state_dims]))
-        self.action_buffer = torch.zeros((capacity,arg_params[action_dims]))
+        self.curr_pos_buffer = torch.zeros((capacity,arg_params['state_dims']))
+        self.goal_buffer = torch.zeros((capacity,arg_params['state_dims']))
+        self.action_buffer = torch.zeros((capacity,arg_params['action_dims']))
         self.reward_buffer = torch.zeros((capacity,1))
-        self.next_state_buffer = torch.zeros((capacity,arg_params[state_dims]))
+        self.next_state_buffer = torch.zeros((capacity,arg_params['state_dims']))
         self.done_buffer = torch.zeros((capacity,1))
 
         self.position = 0
@@ -52,8 +52,8 @@ class ReplayBuffer_dir:
         else:
           sample_indices = torch.randint(0,self.capacity-1,sample_len)
 
-        obs_batch = torch.zeros((sample_len,arg_params[n_channels],arg_params[img_height],arg_params[img_width]))
-        next_obs_batch = torch.zeros((sample_len,arg_params[n_channels],arg_params[img_height],arg_params[img_width]))
+        obs_batch = torch.zeros((sample_len,arg_params['n_channels'],arg_params['img_height'],arg_params['img_width']))
+        next_obs_batch = torch.zeros((sample_len,arg_params['n_channels'],arg_params['img_height'],arg_params['img_width']))
 
         for int i in range(sample_len):
           obs_batch[i,:,:,:] = torch.laod(self.observation_path + str(sample_indices[i]) + '.pt')
