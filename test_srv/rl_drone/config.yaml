@@ -27,7 +27,7 @@ soft_tau: 0.01
 max_episodes: 500
 max_episode_len: 1000
 
-GPU: True
+GPU: False
 mapping: False
 
 simulation_max_x: 1000
