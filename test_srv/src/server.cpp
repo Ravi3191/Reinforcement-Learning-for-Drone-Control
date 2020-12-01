@@ -11,6 +11,7 @@
 bool random_message_generator(test_srv::QuadState::Request  &req,
          test_srv::QuadState::Response &res)
 {
+  ROS_INFO("Got request %s\n", req.in.c_str());
   cv::Mat image = cv::Mat::zeros(cv::Size(128,128),CV_32FC4);
   geometry_msgs::Point a;
   a.x = 0;

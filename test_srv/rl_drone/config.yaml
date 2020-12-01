@@ -2,16 +2,16 @@
 heading_dim: 1
 velocity_dim: 1
 action_dims: 2
-state_dims: 3
+state_dims: 2
 n_channels: 4
 img_height: 128
 img_width: 128
 
-high_vel: 3
-low_vel: 0
+high_vel: 1
+low_vel: -1
 
-high_heading: 3
-low_heading: 0
+high_heading: 1
+low_heading: -1
 
 value_lr: 0.0001
 q_lr: 0.0001
@@ -24,10 +24,10 @@ replay_size: 5000
 gamma: 0.95
 soft_tau: 0.01
 
-max_episodes: 500
-max_episode_len: 1000
+max_episodes: 200
+max_episode_len: 500
 
-GPU: True
+GPU: True 
 mapping: False
 
 simulation_max_x: 1000
@@ -39,11 +39,11 @@ completion_reward: 100
 crash_reward: -100
 dist_reward_weight: 0.05
 
-root_dir: '/home/hersh/Programming'
+root_dir: '/home/hersh/Programming/rl_logging2/'
 
 logging_path: '/logging/training_curves/'
 value_network_path: '/logging/value_net.pth'
-value_network_path: '/logging/policy_net.pth'
+policy_network_path: '/logging/policy_net.pth'
 softq1_path: '/logging/softq1_net.pth'
 softq2_path: '/logging/softq2_net.pth'
 reward_array_path: '/logging/rewards.npy'
