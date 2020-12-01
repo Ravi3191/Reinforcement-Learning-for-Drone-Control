@@ -2,7 +2,7 @@
 heading_dim: 1
 velocity_dim: 1
 action_dims: 2
-state_dims: 2
+state_dims: 3
 n_channels: 4
 img_height: 128
 img_width: 128
@@ -27,7 +27,7 @@ soft_tau: 0.01
 max_episodes: 500
 max_episode_len: 1000
 
-GPU: False
+GPU: True
 mapping: False
 
 simulation_max_x: 1000
@@ -39,7 +39,7 @@ completion_reward: 100
 crash_reward: -100
 dist_reward_weight: 0.05
 
-root_dir: '/home/ravi/Ravi_D/Acadamic/UPENN/Third_sem/CIS_700_02/Project/Reinforcement-Learning-for-Drone-Control' 
+root_dir: '/home/hersh/Programming'
 
 logging_path: '/logging/training_curves/'
 value_network_path: '/logging/value_net.pth'
