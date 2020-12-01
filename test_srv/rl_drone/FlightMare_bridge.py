@@ -48,13 +48,13 @@ class FlightMare():
     self.bridge = CvBridge()
     self.arg_params = arg_params
 
-    self.state_ = [np.zeros((arg_params['img_height'],arg_params['img_width'],arg_params['n_channels'])),np.zeros((2,1)),np.zeros((2,1))] 
+    self.state_ = [np.zeros((arg_params['img_height'],arg_params['img_width'],arg_params['n_channels'])),np.zeros((2,)),np.zeros((2,))] 
 
     self.reward_ = 0
 
     self.is_done_ = False
 
-    self.prev_state_ = [np.zeros((2,1)),np.zeros((2,1))] #store only pos and goal of the prev_state
+    self.prev_state_ = [np.zeros((2,)),np.zeros((2,))] #store only pos and goal of the prev_state
 
     self.crash_ = False
 
@@ -81,16 +81,16 @@ class FlightMare():
     else:
 
       if not (self.crash_):
-        self.reward_ = self.arg_params['dist_reward_weight']*(np.linalg.norm(self.prev_state_[1]-self.prev_state[0]) - np.linalg.norm(self.curr_state_[2]-self.curr_state[1]))
+        self.reward_ = self.arg_params['dist_reward_weight']*(np.linalg.norm(self.prev_state_[1]-self.prev_state_[0]) - np.linalg.norm(self.state_[2]-self.state_[1]))
       else:
         self.reward_ = self.arg_params['crash_reward']
   
-  def _take_action(self,action):
+  def _take_action(self):
 
     self.prev_state_[0] = self.state_[1].copy()
     self.prev_state_[1] = self.state_[2].copy()
     
-    msg = "1 " + str(self.curr_action_[0,0]) + " " + str(self.curr_action_[1,0])
+    msg = "1 " + str(self.curr_action_[0,0]) + " " + str(self.curr_action_[0,1])
     
     rsp = self.updated_state(msg)
 
@@ -99,11 +99,11 @@ class FlightMare():
 
     self.state_[0] = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough') #(H,W,n)
 
-    self.state_[1][0,0] = rsp.current_position.x
-    self.state_[1][1,0] = rsp.current_position.y
+    self.state_[1][0] = rsp.current_position.x
+    self.state_[1][1] = rsp.current_position.y
     
-    self.state_[2][0,0] = rsp.goal_position.x
-    self.state_[2][1,0] = rsp.goal_position.y
+    self.state_[2][0] = rsp.goal_position.x
+    self.state_[2][1] = rsp.goal_position.y
 
   def reset(self):
     msg = "0 0 0"
@@ -116,10 +116,10 @@ class FlightMare():
 
     self.state_[0] = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough') #(H,W,n)
 
-    self.state_[1][0,0] = rsp.current_position.x
-    self.state_[1][1,0] = rsp.current_position.y
+    self.state_[1][0] = rsp.current_position.x
+    self.state_[1][1] = rsp.current_position.y
     
-    self.state_[2][0,0] = rsp.goal_position.x
-    self.state_[2][1,0] = rsp.goal_position.y
+    self.state_[2][0] = rsp.goal_position.x
+    self.state_[2][1] = rsp.goal_position.y
 
     return self.state_
