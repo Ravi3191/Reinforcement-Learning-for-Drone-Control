@@ -39,14 +39,11 @@ completion_reward: 100
 crash_reward: -100
 dist_reward_weight: 0.05
 
-root_dir: '/home/hersh/Programming/rl_logging2/'
+load_pretrained: False
+pretrained_dir: 
 
-logging_path: '/logging/training_curves/'
-value_network_path: '/logging/value_net.pth'
-policy_network_path: '/logging/policy_net.pth'
-softq1_path: '/logging/softq1_net.pth'
-softq2_path: '/logging/softq2_net.pth'
-reward_array_path: '/logging/rewards.npy'
+root_dir: '/home/hersh/Programming/rl_logging2/'
+logging_path: '/logging/'
 
 observation_path: '/buffer/obs/'
 next_observation_path: '/buffer/next_obs/'

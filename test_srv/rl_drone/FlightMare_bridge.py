@@ -108,7 +108,11 @@ class FlightMare():
     # self.state_[0] = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough') #(H,W,n)
     tmp_img = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough')
     img_cvt = tmp_img.astype(np.float32)/255.0
-    self.state_[0] = img_cvt
+    
+    if(self.arg_params['mapping']):
+    	self.state_[0] = img_cvt
+    else:
+    	self.state_[0] = img_cvt[:,:,:-1]
     
 
     self.state_[1][0] = rsp.current_position.x
@@ -137,7 +141,11 @@ class FlightMare():
     # self.state_[0] = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough') #(H,W,n)
     tmp_img = self.bridge.imgmsg_to_cv2(rsp.image, desired_encoding='passthrough')
     img_cvt = tmp_img.astype(np.float32)/255.0
-    self.state_[0] = img_cvt
+
+    if(self.arg_params['mapping']):
+    	self.state_[0] = img_cvt
+    else:
+    	self.state_[0] = img_cvt[:,:,:-1]
 
     self.state_[1][0] = rsp.current_position.x
     self.state_[1][1] = rsp.current_position.y

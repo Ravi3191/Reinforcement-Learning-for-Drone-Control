@@ -40,7 +40,15 @@ class Learner():
                 self.device = "cuda:0"
 
         date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        path = arg_params['root_dir'] + arg_params['logging_path'] + date[:2] + date[3:5]  + date[6:10] + date[11:13] + date[14:16] + date[17:19] + '/'
+        date_path = date[:2] + date[3:5]  + date[6:10] + date[11:13] + date[14:16] + date[17:19] + '/'
+        
+        self.curr_log_path = arg_params['root_dir'] + arg_params['logging_path'] + date_path
+
+        self.value_network_path = self.curr_log_path + 'value_net.pth'
+        self.policy_network_path = self.curr_log_path + 'policy_net.pth'
+        self.softq1_network_path = self.curr_log_path + 'softq1_net.pth'
+        self.softq2_network_path = self.curr_log_path + 'softq2_net.pth' 
+        self.rewards_path = self.curr_log_path + 'rewards.npy'
 
         try:
             print(path)
@@ -64,6 +72,14 @@ class Learner():
                                         arg_params['state_dims']).to(self.device)
         self.policy_net = rl_models.PolicyNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
                                         arg_params['state_dims'], arg_params['latent_dims'],self.device).to(self.device)
+
+        if(arg_params['load_pretrained']):
+
+        	pretrained_path = arg_params['root_dir'] + arg_params['logging_path'] + arg_params['pretrained_dir']
+        	self.value_net.load_state_dict(torch.load(pretrained_path + 'value_net.pth'))
+        	self.policy_net.load_state_dict(torch.load(pretrained_path + 'policy_net.pth'))
+        	self.soft_q_net1.load_state_dict(torch.load(pretrained_path + 'softq1_net.pth'))
+        	self.soft_q_net2.load_state_dict(torch.load(pretrained_path + 'softq2_net.pth'))        	
 
         for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
             target_param.data.copy_(param.data)
@@ -188,11 +204,11 @@ class Learner():
 
             #save models
 
-            torch.save(self.value_net, arg_params["root_dir"] + arg_params['value_network_path'])
-            torch.save(self.policy_net, arg_params["root_dir"]+ arg_params['policy_network_path'])
-            torch.save(self.soft_q_net1, arg_params["root_dir"]+ arg_params['softq1_path'])
-            torch.save(self.soft_q_net2, arg_params["root_dir"]+ arg_params['softq2_path'])
-            np.save(arg_params["root_dir"] + arg_params['reward_array_path'],rewards)
+            torch.save(self.value_net, self.value_network_path)
+            torch.save(self.policy_net, self.policy_network_path)
+            torch.save(self.soft_q_net1, self.softq1_network_path)
+            torch.save(self.soft_q_net2, self.softq2_network_path)
+            np.save(self.rewards_path,rewards)
 
 
 if __name__ == '__main__':
