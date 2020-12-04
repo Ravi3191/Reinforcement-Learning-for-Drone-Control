@@ -51,14 +51,14 @@ class Learner():
         self.rewards_path = self.curr_log_path + 'rewards.npy'
 
         try:
-            print(path)
-            os.makedirs(path,exist_ok = True)
+            print("logging to...", self.curr_log_path)
+            os.makedirs(self.curr_log_path,exist_ok = True)
         except:
             print('unable to create directory')
             exit()
 
 
-        self.logging = SummaryWriter(path)
+        self.logging = SummaryWriter(self.curr_log_path)
 
         self.steps = 0
 
