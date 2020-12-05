@@ -204,10 +204,10 @@ class Learner():
 
             #save models
 
-            torch.save(self.value_net, self.value_network_path)
-            torch.save(self.policy_net, self.policy_network_path)
-            torch.save(self.soft_q_net1, self.softq1_network_path)
-            torch.save(self.soft_q_net2, self.softq2_network_path)
+            torch.save(self.value_net.state_dict(), self.value_network_path)
+            torch.save(self.policy_net.state_dict(), self.policy_network_path)
+            torch.save(self.soft_q_net1.state_dict(), self.softq1_network_path)
+            torch.save(self.soft_q_net2.state_dict(), self.softq2_network_path)
             np.save(self.rewards_path,rewards)
 
 

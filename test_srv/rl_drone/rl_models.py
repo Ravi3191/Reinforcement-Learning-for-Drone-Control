@@ -115,7 +115,8 @@ class PolicyNetwork(nn.Module):
         z      = normal.sample()
         action = torch.tanh(mean+ std*z.to(self.device))
         log_prob = Normal(mean, std).log_prob(mean+ std*z.to(self.device)) - torch.log(1 - action.pow(2) + epsilon)
-        return action, (log_prob[:,0]*log_prob[:,1])[:,None], z, mean, log_std
+        log_prob = log_prob.sum(axis = 1,keepdims = True)
+        return action, log_prob, z, mean, log_std
         
     
     def get_action(self, im, x, goal):
