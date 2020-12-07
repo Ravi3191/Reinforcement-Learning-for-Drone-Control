@@ -97,6 +97,8 @@ class Learner():
         self.replay_buffer = mem_buf.ReplayBuffer_dir(arg_params)
         self.batch_size = arg_params['batch_size']
 
+        self.alpha = arg_params['alpha']
+
         self.env = FM.FlightMare(arg_params)
 
     def update(self,gamma=0.99,soft_tau=1e-2):
@@ -133,7 +135,7 @@ class Learner():
     # Training Value Function
         predicted_new_q_value = torch.min(self.soft_q_net1(im, state, goal, new_action),self.soft_q_net2(im, state, goal, new_action))
         
-        target_value_func = predicted_new_q_value - log_prob
+        target_value_func = predicted_new_q_value - self.alpha*log_prob
         
         value_loss = self.value_criterion(predicted_value, target_value_func.detach())
         self.logging.add_scalar('Loss/value',value_loss,self.steps)
@@ -143,7 +145,7 @@ class Learner():
         self.value_optimizer.step()
 
     # Training Policy Function
-        policy_loss = (log_prob - predicted_new_q_value).mean()
+        policy_loss = (self.alpha*log_prob - predicted_new_q_value).mean()
         self.logging.add_scalar('Loss/policy_loss',policy_loss,self.steps)
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
