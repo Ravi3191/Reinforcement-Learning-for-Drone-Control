@@ -76,10 +76,10 @@ class Learner():
         if(arg_params['load_pretrained']):
 
         	pretrained_path = arg_params['root_dir'] + arg_params['logging_path'] + arg_params['pretrained_dir']
-        	self.value_net.load_state_dict(torch.load(pretrained_path + '/value_net.pth'))
-        	self.policy_net.load_state_dict(torch.load(pretrained_path + '/policy_net.pth'))
-        	self.soft_q_net1.load_state_dict(torch.load(pretrained_path + '/softq1_net.pth'))
-        	self.soft_q_net2.load_state_dict(torch.load(pretrained_path + '/softq2_net.pth'))        	
+        	self.value_net = torch.load(pretrained_path + '/value_net.pth')
+        	self.policy_net = torch.load(pretrained_path + '/policy_net.pth')
+        	self.soft_q_net1 = torch.load(pretrained_path + '/softq1_net.pth')
+        	self.soft_q_net2 = torch.load(pretrained_path + '/softq2_net.pth')
 
         for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
             target_param.data.copy_(param.data)
