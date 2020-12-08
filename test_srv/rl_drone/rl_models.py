@@ -21,20 +21,25 @@ class ValueNetwork(torch.nn.Module):
         self.res = nn.Sequential(*self.base_layers[:-1])
         self.linear0 = self.base_layers[-1]
 
-        self.linear1 = nn.Linear(1000 + n_dims,512)
-        self.linear2 = nn.Linear(512,64)
-        self.linear3 = nn.Linear(64,1)
+        self.linear1 = nn.Linear(1000,512)
+        self.linear2 = nn.Linear(512,100)
+        self.linear3 = nn.Linear(100 + n_dims,64)
+        self.linear4 = nn.Linear(64,32)
+        self.linear5 = nn.Linear(32,1)
 
     def forward(self, im, x, goal):
 
       output = self.res(im).flatten(1,-1)
-      output = self.linear0(output)
-      
-      output = torch.cat((output,goal - x),axis = 1)
+      output = self.linear0(output)            
 
       output = F.leaky_relu(self.linear1(output))
       output = F.leaky_relu(self.linear2(output))
-      output = self.linear3(output)
+
+      output = torch.cat((output,goal - x),axis = 1)
+
+      output = F.leaky_relu(self.linear3(output))
+      output = F.leaky_relu(self.linear4(output))
+      output = self.linear5(output)
 
       return output
 
@@ -50,20 +55,25 @@ class SoftQNetwork(torch.nn.Module):
         self.res = nn.Sequential(*self.base_layers[:-1])
         self.linear0 = self.base_layers[-1]
 
-        self.linear1 = nn.Linear(1000 + n_dims + action_dims,512)
-        self.linear2 = nn.Linear(512,64)
-        self.linear3 = nn.Linear(64,1)
+        self.linear1 = nn.Linear(1000,512)
+        self.linear2 = nn.Linear(512,100)
+        self.linear3 = nn.Linear(100 + n_dims + action_dims, 64)
+        self.linear4 = nn.Linear(64,32)
+        self.linear5 = nn.Linear(32,1)
 
     def forward(self, im, x, goal, action):
 
       output = self.res(im).flatten(1,-1)
       output = self.linear0(output)
-      
-      output = torch.cat((output,goal - x,action),axis = 1)
 
       output = F.leaky_relu(self.linear1(output))
       output = F.leaky_relu(self.linear2(output))
-      output = self.linear3(output)
+
+      output = torch.cat((output,goal - x,action),axis = 1)
+
+      output = F.leaky_relu(self.linear3(output))
+      output = F.leaky_relu(self.linear4(output))
+      output = self.linear5(output)
 
       return output
 
@@ -86,8 +96,11 @@ class PolicyNetwork(nn.Module):
         self.res = nn.Sequential(*self.base_layers[:-1])
         self.linear0 = self.base_layers[-1]
 
-        self.linear1 = nn.Linear(1000 + n_dims,512)
-        self.linear2 = nn.Linear(512,latent_dims)
+        self.linear1 = nn.Linear(1000,512)
+        self.linear2 = nn.Linear(512,100)
+        self.linear3 = nn.Linear(100 + n_dims,100)
+        self.linear4 = nn.Linear(100 ,100)
+        self.linear5 = nn.Linear(100,latent_dims)
         
         self.mean_linear = nn.Linear(latent_dims, action_dims)
         
@@ -97,9 +110,15 @@ class PolicyNetwork(nn.Module):
 
         output = self.res(im).flatten(1,-1)
         output = self.linear0(output)
-        output = torch.cat((output,(goal - x)),axis = 1)
+
         output = F.leaky_relu(self.linear1(output.float()))
-        output = self.linear2(output)
+        output = F.leaky_relu(self.linear2(output.float()))
+
+        output = torch.cat((output,(goal - x)),axis = 1)
+
+        output = F.leaky_relu(self.linear3(output.float()))
+        output = F.leaky_relu(self.linear4(output.float()))
+        output = self.linear5(output)
         
         mean    = self.mean_linear(output)
         log_std = self.log_std_linear(output)

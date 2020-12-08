@@ -62,9 +62,19 @@ class Learner():
 
         self.steps = 0
 
-        self.value_net        = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
+        if(arg_params['use_val_network']):
 
-        self.target_value_net = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
+            self.value_net        = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
+
+            self.target_value_net = rl_models.ValueNetwork(arg_params['n_channels'],arg_params['state_dims']).to(self.device)
+
+        else:
+
+            self.target_soft_q_net1 = rl_models.SoftQNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
+                                            arg_params['state_dims']).to(self.device)
+            self.target_soft_q_net2 = rl_models.SoftQNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
+                                            arg_params['state_dims']).to(self.device)
+
 
         self.soft_q_net1 = rl_models.SoftQNetwork(arg_params['n_channels'],arg_params['velocity_dim'] + arg_params['heading_dim'],\
                                         arg_params['state_dims']).to(self.device)
@@ -81,15 +91,26 @@ class Learner():
         	self.soft_q_net1 = torch.load(pretrained_path + '/softq1_net.pth')
         	self.soft_q_net2 = torch.load(pretrained_path + '/softq2_net.pth')
 
-        for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
-            target_param.data.copy_(param.data)
+        if(arg_params['use_val_network']):
+
+            for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
+                target_param.data.copy_(param.data)
+        else:
+
+            for target_param, param in zip(self.target_soft_q_net1.parameters(), self.soft_q_net1.parameters()):
+                target_param.data.copy_(param.data)
+
+            for target_param, param in zip(self.target_soft_q_net2.parameters(), self.soft_q_net2.parameters()):
+                target_param.data.copy_(param.data)
             
 
-        self.value_criterion  = nn.MSELoss()
+        if(arg_params['use_val_network']):
+            self.value_criterion  = nn.MSELoss()
         self.soft_q_criterion1 = nn.MSELoss()
         self.soft_q_criterion2 = nn.MSELoss()
 
-        self.value_optimizer  = optim.Adam(self.value_net.parameters(), lr = arg_params['value_lr'])
+        if(arg_params['use_val_network']):
+            self.value_optimizer  = optim.Adam(self.value_net.parameters(), lr = arg_params['value_lr'])
         self.soft_q_optimizer1 = optim.Adam(self.soft_q_net1.parameters(), lr = arg_params['q_lr'])
         self.soft_q_optimizer2 = optim.Adam(self.soft_q_net2.parameters(), lr = arg_params['q_lr'])
         self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr = arg_params['policy_lr'])
@@ -151,11 +172,69 @@ class Learner():
         policy_loss.backward()
         self.policy_optimizer.step()
         
+        if((self.steps % arg_params['update_tar'] == 0) and (self.steps != 0)):
+
+            for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - soft_tau) + param.data * soft_tau
+                )
+
+        self.steps += 1
+
+    def update_no_val(self,gamma=0.99,soft_tau=1e-2):
         
-        for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - soft_tau) + param.data * soft_tau
-            )
+        im, state, goal, action, reward, next_im, next_state, done = self.replay_buffer.sample()
+
+        im, state, goal, action, reward, next_im, next_state, done = im.to(self.device), state.to(self.device), goal.to(self.device),\
+         action.to(self.device), reward.to(self.device), next_im.to(self.device), next_state.to(self.device), done.to(self.device)
+
+        next_action, log_next_prob, _, _, _ = self.policy_net.evaluate(im, state, goal)
+        predicted_next_q_value1 = self.soft_q_net1(next_im, next_state, goal,next_action)
+        predicted_next_q_value2 = self.soft_q_net2(next_im, next_state ,goal,next_action)
+
+            
+    # Training Q Function
+        target_q_value = reward + (1 - done) * gamma * (torch.min(predicted_next_q_value1,predicted_next_q_value2) - self.alpha * log_next_prob)
+
+        predicted_q_value1 = self.soft_q_net1(im, state, goal,action)
+        predicted_q_value2 = self.soft_q_net2(im, state ,goal,action)
+        
+        q_value_loss1 = self.soft_q_criterion1(predicted_q_value1, target_q_value.detach())
+        q_value_loss2 = self.soft_q_criterion2(predicted_q_value2, target_q_value.detach())
+
+        self.logging.add_scalar('Loss/softq1',q_value_loss1,self.steps)
+        self.logging.add_scalar('Loss/softq2',q_value_loss2,self.steps)     
+
+        self.soft_q_optimizer1.zero_grad()
+        q_value_loss1.backward()
+        self.soft_q_optimizer1.step()
+
+        self.soft_q_optimizer2.zero_grad()
+        q_value_loss2.backward()
+        self.soft_q_optimizer2.step()    
+
+    # Training Policy Function
+        new_action, log_prob, _, _, _ = self.policy_net.evaluate(im, state, goal)
+        predicted_new_q_value = torch.min(self.soft_q_net1(im, state, goal, new_action),self.soft_q_net2(im, state, goal, new_action))
+
+        policy_loss = (self.alpha*log_prob - predicted_new_q_value).mean()
+        self.logging.add_scalar('Loss/policy_loss',policy_loss,self.steps)
+
+        self.policy_optimizer.zero_grad()
+        policy_loss.backward()
+        self.policy_optimizer.step()
+        
+        if((self.steps % arg_params['update_tar'] == 0) and (self.steps != 0)):
+
+            for target_param, param in zip(self.target_soft_q_net1.parameters(), self.soft_q_net1.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - soft_tau) + param.data * soft_tau
+                )
+
+            for target_param, param in zip(self.target_soft_q_net2.parameters(), self.soft_q_net2.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - soft_tau) + param.data * soft_tau
+                )
 
         self.steps += 1
 
@@ -193,7 +272,10 @@ class Learner():
                 episode_reward += reward
 
                 if len(self.replay_buffer) > self.batch_size:
-                    self.update()
+                    if(arg_params['use_val_network']):
+                        self.update()
+                    else:
+                        self.update()
                 
                 if done:
                     break
