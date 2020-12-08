@@ -275,7 +275,7 @@ class Learner():
                     if(arg_params['use_val_network']):
                         self.update()
                     else:
-                        self.update()
+                        self.update_no_val()
                 
                 if done:
                     break

@@ -27,7 +27,7 @@ soft_tau: 0.01
 max_episodes: 200
 max_episode_len: 500
 
-use_val_network: True
+use_val_network: False
 update_tar: 50
 
 alpha: 0.4
