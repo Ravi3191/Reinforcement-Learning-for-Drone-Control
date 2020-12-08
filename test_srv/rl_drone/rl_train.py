@@ -189,8 +189,8 @@ class Learner():
          action.to(self.device), reward.to(self.device), next_im.to(self.device), next_state.to(self.device), done.to(self.device)
 
         next_action, log_next_prob, _, _, _ = self.policy_net.evaluate(next_im, next_state, goal)
-        predicted_next_q_value1 = self.soft_q_net1(next_im, next_state, goal,next_action)
-        predicted_next_q_value2 = self.soft_q_net2(next_im, next_state ,goal,next_action)
+        predicted_next_q_value1 = self.target_soft_q_net1(next_im, next_state, goal,next_action)
+        predicted_next_q_value2 = self.target_soft_q_net1(next_im, next_state ,goal,next_action)
 
             
     # Training Q Function
