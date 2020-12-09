@@ -49,6 +49,7 @@ class Learner():
         self.softq1_network_path = self.curr_log_path + 'softq1_net.pth'
         self.softq2_network_path = self.curr_log_path + 'softq2_net.pth' 
         self.rewards_path = self.curr_log_path + 'rewards.npy'
+        self.velocities_path = self.curr_log_path + 'velocities.npy'
 
         try:
             print("logging to...", self.curr_log_path)
@@ -86,10 +87,10 @@ class Learner():
         if(arg_params['load_pretrained']):
 
         	pretrained_path = arg_params['root_dir'] + arg_params['logging_path'] + arg_params['pretrained_dir']
-        	self.value_net = torch.load(pretrained_path + '/value_net.pth')
-        	self.policy_net = torch.load(pretrained_path + '/policy_net.pth')
-        	self.soft_q_net1 = torch.load(pretrained_path + '/softq1_net.pth')
-        	self.soft_q_net2 = torch.load(pretrained_path + '/softq2_net.pth')
+        	self.value_net.load_state_dict(torch.load(pretrained_path + '/value_net.pth'))
+        	self.policy_net.load_state_dict(torch.load(pretrained_path + '/policy_net.pth'))
+        	self.soft_q_net1.load_state_dict(torch.load(pretrained_path + '/softq1_net.pth'))
+        	self.soft_q_net2.load_state_dict(torch.load(pretrained_path + '/softq2_net.pth'))
 
         if(arg_params['use_val_network']):
 
@@ -242,6 +243,7 @@ class Learner():
 
         episodes = 0
         rewards = np.zeros(arg_params['max_episodes'])
+        velocities = np.zeros(arg_params['max_episodes'])
 
         while episodes < arg_params['max_episodes']:
             print("On Episode:", episodes)
@@ -250,6 +252,7 @@ class Learner():
             curr_state = (torch.from_numpy(complete_state[1])).unsqueeze(0).to(self.device).to(self.device)
             goal = (torch.from_numpy(complete_state[2])).unsqueeze(0).to(self.device)
             episode_reward = 0
+            episode_velocity = 0
 
             iters = 0
 
@@ -259,6 +262,8 @@ class Learner():
 
                 iters += 1
                 action = self.policy_net.get_action(im,curr_state,goal).detach()
+                # hardcoded vel
+                vel = (action.numpy()[0][0] + 1)/2 * 3
                 
                 next_complete_state, reward, done = self.env.step(action.numpy())
 
@@ -270,17 +275,22 @@ class Learner():
                 im = next_obs
                 curr_state = next_state
                 episode_reward += reward
+                episode_velocity += vel
 
-                if len(self.replay_buffer) > self.batch_size:
-                    if(arg_params['use_val_network']):
-                        self.update()
-                    else:
-                        self.update_no_val()
+                if not arg_params["eval"]:
+                    if len(self.replay_buffer) > self.batch_size:
+                        if(arg_params['use_val_network']):
+                            self.update()
+                        else:
+                            self.update_no_val()
+                else:
+                    time.sleep(0.5)
                 
                 if done:
                     break
 
             rewards[episodes] = episode_reward
+            velocities[episodes] = episode_velocity/iters
             self.logging.add_scalar('Reward/episode_reward',episode_reward,episodes)
             episodes += 1
             print("episode :",episodes," episode reward:", episode_reward," total_steps:", iters)
@@ -293,6 +303,7 @@ class Learner():
             torch.save(self.soft_q_net1.state_dict(), self.softq1_network_path)
             torch.save(self.soft_q_net2.state_dict(), self.softq2_network_path)
             np.save(self.rewards_path,rewards)
+            np.save(self.velocities_path,velocities)
 
 
 if __name__ == '__main__':

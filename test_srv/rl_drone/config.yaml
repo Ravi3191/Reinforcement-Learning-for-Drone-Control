@@ -46,6 +46,7 @@ dist_reward_weight: 0.05
 
 load_pretrained: False
 pretrained_dir: '30112020212323'
+eval: False
 
 root_dir: '/home/hersh/Programming/rl_logging2/'
 logging_path: '/logging/'
